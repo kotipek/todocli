@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -44,8 +45,8 @@ func main() {
 			case "Создать":
 				tasks = append(tasks, createTask())
 				storage.WriteTasks(tasks)
-			// case "Вывести":
-			// 	getTasks()
+			case "Вывести":
+				storage.LoadTasks()
 			default:
 				fmt.Println("Введите help для подсказки")
 			}
@@ -55,9 +56,10 @@ func main() {
 
 func createTask() models.Task {
 	return models.Task{
-		Name:        "name1",
+		ID:          rand.Int(),
 		Status:      models.StatusCompleted,
-		Date:        time.Now(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 		Description: "gjrbnrnbgjr"}
 }
 

@@ -11,8 +11,9 @@ const (
 )
 
 type Task struct {
-	Name        string
+	ID          int
 	Status      Status
-	Date        time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Description string
 }
