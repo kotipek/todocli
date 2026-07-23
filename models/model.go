@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Status string
 
@@ -16,4 +19,17 @@ type Task struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Description string
+}
+
+func ParseStatus(statusInput string) (Status, error) {
+	switch statusInput {
+	case "NotStarted":
+		return StatusNotStarted, nil
+	case "InProgress":
+		return StatusInProgress, nil
+	case "Completed":
+		return StatusCompleted, nil
+	default:
+		return "", errors.New("Неизвестный статус")
+	}
 }
