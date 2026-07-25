@@ -14,7 +14,7 @@ const (
 )
 
 type Task struct {
-	ID          int
+	ID          string
 	Status      Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

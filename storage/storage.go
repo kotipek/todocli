@@ -2,47 +2,47 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"todocli/models"
 )
 
-func WriteTasks(tasks []models.Task) {
-	fmt.Println("11111111111111111111111111111111111")
+func WriteTasks(tasks []models.Task) error {
 	file, err := os.OpenFile("tasks.json", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
+	defer file.Close()
 
 	taskJSON, err := json.MarshalIndent(tasks, "", "  ")
 	if err != nil {
-		fmt.Println("Ошибка при конвертации в JSON:", err)
-		return
+		return err
 	}
-	defer file.Close()
-
-	file.WriteString(string(taskJSON))
-	fmt.Println(string(taskJSON))
+	file.Write(taskJSON)
+	return nil
 
 }
 
-func LoadTasks() {
+func LoadTasks() ([]models.Task, error) {
 	file, err := os.Open("tasks.json")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		if os.IsNotExist(err) {
+			return []models.Task{}, nil
+		}
+		return nil, err
 	}
 	defer file.Close()
 
-	data := make([]byte, 64)
-
-	for {
-		n, err := file.Read(data)
-		if err == io.EOF { // если конец файла
-			break // выходим из цикла
-		}
-		fmt.Print(string(data[:n]))
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
 	}
+	var tasks []models.Task
+
+	err = json.Unmarshal(data, &tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }

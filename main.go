@@ -3,17 +3,21 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
 	"time"
 	"todocli/models"
 	"todocli/storage"
+
+	"github.com/google/uuid"
 )
 
-var tasks []models.Task
-
 func main() {
+	tasks, err := storage.LoadTasks()
+	if err != nil {
+		fmt.Println("Файла тасок нет")
+	}
+
 	var actionType string
 	if len(os.Args) > 1 {
 		actionType = os.Args[1]
@@ -30,8 +34,14 @@ func main() {
 		for {
 			fmt.Print("Введите действие - ")
 			text, _ := reader.ReadString('\n')
-			parts := strings.SplitN(text, " ", 3)
-			actionType = strings.TrimSpace(parts[0])
+			parts := strings.SplitN(strings.TrimSpace(text), " ", 3)
+			actionType := parts[0]
+			if len(parts) > 1 {
+				parts[1] = strings.TrimSpace(parts[1])
+			}
+			if len(parts) > 2 {
+				parts[2] = strings.TrimSpace(parts[2])
+			}
 			fmt.Println(actionType)
 			switch actionType {
 			case "help":
@@ -45,15 +55,23 @@ func main() {
 					fmt.Println("Создать <статус> <описание>")
 					continue
 				}
-				task, err := createTask(parts[1], parts[2])
+				task, err := CreateTask(parts[1], parts[2])
 				if err != nil {
 					fmt.Println(err)
 					continue
 				}
 				tasks = append(tasks, task)
-				storage.WriteTasks(tasks)
+				err = storage.WriteTasks(tasks)
+				if err != nil {
+					fmt.Println("Ошибка сохранения:", err)
+				}
 			case "Вывести":
-				storage.LoadTasks()
+				if len(parts) > 1 {
+					fmt.Println("тут могал быть ваша реклама")
+					PrintTasksByStatus(tasks, parts[1])
+				} else {
+					PrintAllTasks(tasks)
+				}
 			default:
 				fmt.Println("Введите help для подсказки")
 			}
@@ -61,13 +79,13 @@ func main() {
 	}
 }
 
-func createTask(statusInput, description string) (models.Task, error) {
+func CreateTask(statusInput, description string) (models.Task, error) {
 	status, err := models.ParseStatus(statusInput)
 	if err != nil {
 		return models.Task{}, err
 	}
 	return models.Task{
-		ID:          rand.Int(),
+		ID:          uuid.New().String(),
 		Status:      status,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -75,12 +93,29 @@ func createTask(statusInput, description string) (models.Task, error) {
 	}, nil
 }
 
-// func getTasks() {
-// 	for i := range tasks {
-// 		fmt.Println("Название - ", tasks[i].Name,
-// 			"Статус - ", tasks[i].Status,
-// 			"Дата - ", tasks[i].Date,
-// 			"Описание - ", tasks[i].Description,
-// 			"Номер задачи - ", i+1)
-// 	}
-// }
+func PrintAllTasks(tasks []models.Task) {
+	for _, task := range tasks {
+		PrintTask(task)
+	}
+}
+
+func PrintTasksByStatus(tasks []models.Task, statusInput string) {
+	status, err := models.ParseStatus(statusInput)
+	if err != nil {
+		return
+	}
+	for _, task := range tasks {
+		if task.Status == status {
+			PrintTask(task)
+		}
+	}
+}
+
+func PrintTask(task models.Task) {
+	fmt.Println("--------------------------------------------")
+	fmt.Println("ID - ", task.ID)
+	fmt.Println("Статус - ", task.Status)
+	fmt.Println("Дата создания - ", task.CreatedAt.Format("2020-01-14 15:05"))
+	fmt.Println("Дата изменения - ", task.UpdatedAt.Format("2020-01-14 15:05"))
+	fmt.Println("Описание - ", task.Description)
+}
