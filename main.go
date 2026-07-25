@@ -31,7 +31,6 @@ func main() {
 			fmt.Print("Введите действие - ")
 			text, _ := reader.ReadString('\n')
 			parts := strings.SplitN(text, " ", 3)
-			// actionType = text
 			actionType = strings.TrimSpace(parts[0])
 			fmt.Println(actionType)
 			switch actionType {
