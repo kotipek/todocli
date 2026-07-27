@@ -72,6 +72,17 @@ func main() {
 				} else {
 					PrintAllTasks(tasks)
 				}
+			case "Удалить":
+				if len(parts) > 1 {
+					tasks, err = storage.DeleteTask(tasks, parts[1])
+					if err != nil {
+						fmt.Println("Нету такой задачи")
+					}
+				}
+				err = storage.WriteTasks(tasks)
+				if err != nil {
+					fmt.Println("Ошибка сохранения:", err)
+				}
 			default:
 				fmt.Println("Введите help для подсказки")
 			}

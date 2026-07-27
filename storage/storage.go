@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"todocli/models"
@@ -45,4 +46,14 @@ func LoadTasks() ([]models.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func DeleteTask(tasks []models.Task, id string) ([]models.Task, error) {
+	for i, task := range tasks {
+		if task.ID == id {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			return tasks, nil
+		}
+	}
+	return tasks, errors.New("Нету такой задачи")
 }
