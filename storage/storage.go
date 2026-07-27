@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 	"todocli/models"
 )
 
@@ -56,4 +57,26 @@ func DeleteTask(tasks []models.Task, id string) ([]models.Task, error) {
 		}
 	}
 	return tasks, errors.New("Нету такой задачи")
+}
+
+func ChangeTask(tasks []models.Task, id string, param string, value string) ([]models.Task, error) {
+	for i := range tasks {
+		if tasks[i].ID == id {
+			if param == "Status" {
+				status, err := models.ParseStatus(value)
+				if err != nil {
+					return tasks, err
+				}
+				tasks[i].Status = status
+				tasks[i].UpdatedAt = time.Now()
+				return tasks, nil
+			}
+			if param == "Description" {
+				tasks[i].Description = value
+				tasks[i].UpdatedAt = time.Now()
+				return tasks, nil
+			}
+		}
+	}
+	return tasks, errors.New("Ошибка, нет такой задачи")
 }

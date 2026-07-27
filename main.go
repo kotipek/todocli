@@ -32,25 +32,20 @@ func main() {
 	} else {
 		reader := bufio.NewReader(os.Stdin)
 		for {
+			fmt.Println("--------------------------------------------")
 			fmt.Print("Введите действие - ")
 			text, _ := reader.ReadString('\n')
-			parts := strings.SplitN(strings.TrimSpace(text), " ", 3)
+			parts := strings.SplitN(strings.TrimSpace(text), " ", 2)
 			actionType := parts[0]
-			if len(parts) > 1 {
-				parts[1] = strings.TrimSpace(parts[1])
-			}
-			if len(parts) > 2 {
-				parts[2] = strings.TrimSpace(parts[2])
-			}
-			fmt.Println(actionType)
 			switch actionType {
 			case "help":
 				fmt.Println("Список действий:")
 				fmt.Println("Создать задачу - Создать <статус> <описание>")
-				fmt.Println("Вывести задачи - Вывести")
-				fmt.Println("Изменить задачу - Изменить")
-				fmt.Println("Удалить задачу - Удалить")
+				fmt.Println("Вывести задачи - Вывести <id (если нужно конкретное)>")
+				fmt.Println("Изменить задачу - Изменить <id> <поле> <значение>")
+				fmt.Println("Удалить задачу - Удалить <id>")
 			case "Создать":
+				parts = SplitCommand(text, 3)
 				if len(parts) < 3 {
 					fmt.Println("Создать <статус> <описание>")
 					continue
@@ -66,13 +61,14 @@ func main() {
 					fmt.Println("Ошибка сохранения:", err)
 				}
 			case "Вывести":
+				parts = SplitCommand(text, 2)
 				if len(parts) > 1 {
-					fmt.Println("тут могал быть ваша реклама")
 					PrintTasksByStatus(tasks, parts[1])
 				} else {
 					PrintAllTasks(tasks)
 				}
 			case "Удалить":
+				parts = SplitCommand(text, 2)
 				if len(parts) > 1 {
 					tasks, err = storage.DeleteTask(tasks, parts[1])
 					if err != nil {
@@ -82,6 +78,19 @@ func main() {
 				err = storage.WriteTasks(tasks)
 				if err != nil {
 					fmt.Println("Ошибка сохранения:", err)
+				}
+			case "Изменить":
+				parts = SplitCommand(text, 4)
+				if len(parts) > 2 {
+					tasks, err = storage.ChangeTask(tasks, parts[1], parts[2], parts[3])
+					if err != nil {
+						fmt.Println("Ошибка изменения:", err)
+						continue
+					}
+					err = storage.WriteTasks(tasks)
+					if err != nil {
+						fmt.Println("Ошибка сохранения:", err)
+					}
 				}
 			default:
 				fmt.Println("Введите help для подсказки")
@@ -126,7 +135,15 @@ func PrintTask(task models.Task) {
 	fmt.Println("--------------------------------------------")
 	fmt.Println("ID - ", task.ID)
 	fmt.Println("Статус - ", task.Status)
-	fmt.Println("Дата создания - ", task.CreatedAt.Format("2020-01-14 15:05"))
-	fmt.Println("Дата изменения - ", task.UpdatedAt.Format("2020-01-14 15:05"))
+	fmt.Println("Дата создания - ", task.CreatedAt.Format("2006-01-02 15:04"))
+	fmt.Println("Дата изменения - ", task.UpdatedAt.Format("2006-01-02 15:04"))
 	fmt.Println("Описание - ", task.Description)
+}
+
+func SplitCommand(command string, countParts int) []string {
+	commands := strings.SplitN(strings.TrimSpace(command), " ", countParts)
+	for i, val := range commands {
+		commands[i] = strings.TrimSpace(val)
+	}
+	return commands
 }
