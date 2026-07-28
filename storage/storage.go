@@ -78,5 +78,5 @@ func ChangeTask(tasks []models.Task, id string, param string, value string) ([]m
 			}
 		}
 	}
-	return tasks, errors.New("Ошибка, нет такой задачи")
+	return tasks, errors.New("Ошибка, нет такого поля")
 }

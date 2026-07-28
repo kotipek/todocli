@@ -20,15 +20,15 @@ func main() {
 
 	var actionType string
 	if len(os.Args) > 1 {
-		actionType = os.Args[1]
-		switch actionType {
-		case "Создать":
-			// tasks = append(tasks, createTask())
-			// task := createTask()
-			// fmt.Println("таска - ", task)
-		default:
-			fmt.Println("Вы не выбрали действие")
+		var text string
+		fmt.Println("||||||||||||||||||||||||||||||||||||||")
+		for i := 1; i < len(os.Args); i++ {
+			text += string(os.Args[i]) + " "
 		}
+		fmt.Println(text)
+		fmt.Println("||||||||||||||||||||||||||||||||||||||")
+		actionType = os.Args[1]
+		tasks = ExecuteCommand(actionType, text, tasks, err)
 	} else {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -37,66 +37,71 @@ func main() {
 			text, _ := reader.ReadString('\n')
 			parts := strings.SplitN(strings.TrimSpace(text), " ", 2)
 			actionType := parts[0]
-			switch actionType {
-			case "help":
-				fmt.Println("Список действий:")
-				fmt.Println("Создать задачу - Создать <статус> <описание>")
-				fmt.Println("Вывести задачи - Вывести <id (если нужно конкретное)>")
-				fmt.Println("Изменить задачу - Изменить <id> <поле> <значение>")
-				fmt.Println("Удалить задачу - Удалить <id>")
-			case "Создать":
-				parts = SplitCommand(text, 3)
-				if len(parts) < 3 {
-					fmt.Println("Создать <статус> <описание>")
-					continue
-				}
-				task, err := CreateTask(parts[1], parts[2])
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-				tasks = append(tasks, task)
-				err = storage.WriteTasks(tasks)
-				if err != nil {
-					fmt.Println("Ошибка сохранения:", err)
-				}
-			case "Вывести":
-				parts = SplitCommand(text, 2)
-				if len(parts) > 1 {
-					PrintTasksByStatus(tasks, parts[1])
-				} else {
-					PrintAllTasks(tasks)
-				}
-			case "Удалить":
-				parts = SplitCommand(text, 2)
-				if len(parts) > 1 {
-					tasks, err = storage.DeleteTask(tasks, parts[1])
-					if err != nil {
-						fmt.Println("Нету такой задачи")
-					}
-				}
-				err = storage.WriteTasks(tasks)
-				if err != nil {
-					fmt.Println("Ошибка сохранения:", err)
-				}
-			case "Изменить":
-				parts = SplitCommand(text, 4)
-				if len(parts) > 2 {
-					tasks, err = storage.ChangeTask(tasks, parts[1], parts[2], parts[3])
-					if err != nil {
-						fmt.Println("Ошибка изменения:", err)
-						continue
-					}
-					err = storage.WriteTasks(tasks)
-					if err != nil {
-						fmt.Println("Ошибка сохранения:", err)
-					}
-				}
-			default:
-				fmt.Println("Введите help для подсказки")
-			}
+			tasks = ExecuteCommand(actionType, text, tasks, err)
 		}
 	}
+}
+
+func ExecuteCommand(actionType string, text string, tasks []models.Task, err error) []models.Task {
+	switch actionType {
+	case "help":
+		fmt.Println("Список действий:")
+		fmt.Println("Создать задачу - Создать <статус> <описание>")
+		fmt.Println("Вывести задачи - Вывести <id (если нужно конкретное)>")
+		fmt.Println("Изменить задачу - Изменить <id> <поле> <значение>")
+		fmt.Println("Удалить задачу - Удалить <id>")
+	case "Создать":
+		parts := SplitCommand(text, 3)
+		if len(parts) < 3 {
+			fmt.Println("Создать <статус> <описание>")
+			break
+		}
+		task, err := CreateTask(parts[1], parts[2])
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		tasks = append(tasks, task)
+		err = storage.WriteTasks(tasks)
+		if err != nil {
+			fmt.Println("Ошибка сохранения:", err)
+		}
+	case "Вывести":
+		parts := SplitCommand(text, 2)
+		if len(parts) > 1 {
+			PrintTasksByStatus(tasks, parts[1])
+		} else {
+			PrintAllTasks(tasks)
+		}
+	case "Удалить":
+		parts := SplitCommand(text, 2)
+		if len(parts) > 1 {
+			tasks, err = storage.DeleteTask(tasks, parts[1])
+			if err != nil {
+				fmt.Println("Нету такой задачи")
+			}
+		}
+		err = storage.WriteTasks(tasks)
+		if err != nil {
+			fmt.Println("Ошибка сохранения:", err)
+		}
+	case "Изменить":
+		parts := SplitCommand(text, 4)
+		if len(parts) > 2 {
+			tasks, err = storage.ChangeTask(tasks, parts[1], parts[2], parts[3])
+			if err != nil {
+				fmt.Println("Ошибка изменения:", err)
+				break
+			}
+			err = storage.WriteTasks(tasks)
+			if err != nil {
+				fmt.Println("Ошибка сохранения:", err)
+			}
+		}
+	default:
+		fmt.Println("Введите help для подсказки")
+	}
+	return tasks
 }
 
 func CreateTask(statusInput, description string) (models.Task, error) {
