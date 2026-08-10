@@ -21,12 +21,9 @@ func main() {
 	var actionType string
 	if len(os.Args) > 1 {
 		var text string
-		fmt.Println("||||||||||||||||||||||||||||||||||||||")
 		for i := 1; i < len(os.Args); i++ {
 			text += string(os.Args[i]) + " "
 		}
-		fmt.Println(text)
-		fmt.Println("||||||||||||||||||||||||||||||||||||||")
 		actionType = os.Args[1]
 		tasks = ExecuteCommand(actionType, text, tasks, err)
 	} else {
